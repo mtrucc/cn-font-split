@@ -17,25 +17,20 @@ for await (const i of features) {
     // if (fs.existsSync('./temp/' + i.featureKey)) continue
     const buffer = fs.readFileSync(
         './temp/' +
-        i.featureKey +
-        '/' +
-        i.featureKey +
-        i.fontLink.replace(/.*\.(.*?)/g, '.$1'),
+            i.featureKey +
+            '/' +
+            i.featureKey +
+            i.fontLink.replace(/.*\.(.*?)/g, '.$1'),
     );
     const b = await convert(new Uint8Array(buffer), 'ttf');
     const config = {
-        out_dir: './temp/' + i.featureKey,
+        outDir: './temp/' + i.featureKey,
         input: b,
         css: {
-            font_family: i.featureKey + '-demo',
-            comment_base: true
-            // comment: {
-            //     base: false,
-            //     name_table: false,
-            //     unicodes: true,
-            // },
+            fontFamily: i.featureKey + '-demo',
+            commentBase: true,
         },
-    }
+    };
     // console.log(config);
     await fontSplit(config);
 }

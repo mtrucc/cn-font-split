@@ -1,0 +1,70 @@
+name: test-font-feature
+
+on:
+    push:
+        tags:
+            - '*'
+    workflow_dispatch:
+jobs:
+    test:
+        runs-on: macOS-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '18'
+                  registry-url: 'https://registry.npmjs.org'
+
+            - name: Install dependencies
+              run: |
+                  npm install pnpm -g
+                  pnpm install
+            - name: Install Playwright Browsers
+              run: |
+                  npm i -g playwright
+                  npx playwright install --with-deps
+            - name: Cache fonts
+              id: cache-fonts
+              uses: actions/cache@v3
+              with:
+                  path: packages/test/temp/font # 字体文件的实际存放路径
+                  key: ${{ runner.os }}-fonts-${{ hashFiles('packages/test/script/downloadFonts.mjs','packages/test/script/downloadFont/**/*','packages/test/FeatureConfig.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-fonts-
+
+            - name: Install fonts dependencies
+              if: steps.cache-fonts.outputs.cache-hit != 'true'
+              run: node ./script/downloadFonts.mjs
+              working-directory: packages/test
+
+            - name: Update Deps
+              working-directory: packages/test
+              run: |
+                  pnpm uninstall cn-font-split
+                  pnpm i cn-font-split
+                  pnpm cn-font-split ls
+
+            - name: Build Font
+              working-directory: packages/test
+              run: |
+                  pnpm build
+
+            - name: Start development server
+              working-directory: packages/test
+              run: |
+                  nohup pnpm dev > /dev/null 2>&1 & 
+                  sleep 3
+
+            - name: Run Playwright tests
+              working-directory: packages/test
+              run: pnpm test
+
+            - name: Upload test results
+              if: ${{ !cancelled() }}
+              uses: actions/upload-artifact@v3
+              with:
+                  name: playwright-report
+                  path: packages/test/playwright-report

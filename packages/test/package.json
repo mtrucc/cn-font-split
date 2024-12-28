@@ -5,13 +5,13 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "tsc && vite build",
+        "build": "node ./script/build.mjs && node ./script/article_build.mjs",
         "test": "playwright test",
         "preview": "vite preview"
     },
     "dependencies": {
         "@cn-ui/reactive": "^2.3.0",
-        "@grpc/grpc-js": "^1.12.2",
+        "@grpc/grpc-js": "^1.12.5",
         "google-protobuf": "^3.21.4",
         "gzip": "^0.1.0",
         "jszip": "^3.10.1",
@@ -20,12 +20,13 @@
         "pngjs": "^7.0.0",
         "protobufjs": "^7.4.0",
         "shelljs": "^0.8.5",
-        "solid-js": "^1.8.17",
+        "solid-js": "^1.9.3",
         "solidjs-use": "^2.3.0"
     },
     "devDependencies": {
         "@napi-rs/woff-build": "^0.2.0",
-        "@playwright/test": "^1.44.1",
+        "@playwright/test": "^1.49.1",
+        "@types/pixelmatch": "^5.2.6",
         "@types/pngjs": "^6.0.5",
         "@types/shelljs": "^0.8.15",
         "cn-font-split": "workspace:^"

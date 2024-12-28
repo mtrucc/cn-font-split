@@ -6,6 +6,10 @@ on:
                 description: 'Version number'
                 required: true
                 default: '7.0.0-beta-6'
+            dryRun:
+                description: '测试写这个为 true'
+                required: true
+                default: 'false'
 env:
     CARGO_PKG_VERSION: ${{ github.event.inputs.version }}
 
@@ -198,6 +202,7 @@ jobs:
                   path: ./target/wasm32-wasip1/release/libffi-wasm32-wasip1.wasm
                   if-no-files-found: error
     create-release:
+        if: ${{ github.event.inputs.dryRun != 'true' }}
         runs-on: ubuntu-latest
         needs: [build-wasm, cross-build]
         steps:

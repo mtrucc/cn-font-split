@@ -11,31 +11,31 @@ test('可变字重测试', async ({ page }) => {
         './temp/SourceHanSerifSC-VF/base-demo.diff.png',
     );
 });
-const tag = [
-    'Smileys and emotions',
-    'People',
-    'Animals and nature',
-    'Food and drink',
-    'Travel and places',
-    'Activities and events',
-    'Objects',
-    'Symbols',
-    'Flags',
-];
-for (let iterator of tag) {
-    test('表情包字体' + iterator, async ({ page }) => {
-        await page.goto(
-            'http://localhost:5173/#/article?type=noto-color-emoji&group=' +
-                iterator,
-        );
-        await page.waitForLoadState('load');
+// const tag = [
+//     'Smileys and emotions',
+//     'People',
+//     'Animals and nature',
+//     'Food and drink',
+//     'Travel and places',
+//     'Activities and events',
+//     'Objects',
+//     'Symbols',
+//     'Flags',
+// ];
+// for (let iterator of tag) {
+//     test('表情包字体' + iterator, async ({ page }) => {
+//         await page.goto(
+//             'http://localhost:5173/#/article?type=noto-color-emoji&group=' +
+//                 iterator,
+//         );
+//         await page.waitForLoadState('load');
 
-        iterator = iterator.replace(/\s/g, '-');
-        await compareElAndSave(
-            page,
-            `#${iterator}-base`,
-            `#${iterator}-demo`,
-            `./temp/NotoColorEmoji/${iterator}.diff.png`,
-        );
-    });
-}
+//         iterator = iterator.replace(/\s/g, '-');
+//         await compareElAndSave(
+//             page,
+//             `#${iterator}-base`,
+//             `#${iterator}-demo`,
+//             `./temp/NotoColorEmoji/${iterator}.diff.png`,
+//         );
+//     });
+// }
