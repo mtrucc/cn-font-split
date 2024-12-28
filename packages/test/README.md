@@ -17,7 +17,7 @@ pnpm test # 直接进行测试
 ```
 
 可以使用 VSCode Playwright 插件进行测试，比较简单。
-测试采用 webkit 进行测试, 保证测试稳定性。
+一定需要 MacOS 搭配 webkit 组合来进行测试, 保证测试稳定性。
 
 1. 回归测试
 

@@ -10,7 +10,7 @@ export default defineConfig({
     // Retry on CI only.
     retries: 2,
     timeout: 10 * 1000,
-
+    reporter: [['html', { open: 'never', outputFolder: 'dist' }]],
     projects: [
         {
             name: 'webkit',
