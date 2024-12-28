@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 cn-font-proto = { version = "0.1.0", path = "../../crates/proto", default-features = false }
-cn-font-split = { version = "7.0.0", path = "../..", default-features = false}
+cn-font-split = { version = "7.0.0", path = "../..", default-features = false }
 libc = "0.2.165"
 prost = "0.13.3"
 
