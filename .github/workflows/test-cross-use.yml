@@ -11,54 +11,22 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    cross-:
+    base:
         name: Test - ${{ matrix.platform.os-name }}
         strategy:
             fail-fast: false
             matrix:
                 platform:
-                    - os-name: FreeBSD-x86_64
-                      runs-on: ubuntu-24.04
-                      target: x86_64-unknown-freebsd
-
-                    - os-name: aarch64-unknown-linux-gnu
-                      runs-on: ubuntu-24.04
-                      target: aarch64-unknown-linux-gnu
-
                     - os-name: x86_64-unknown-linux-gnu
                       runs-on: ubuntu-24.04
                       target: x86_64-unknown-linux-gnu
-
-                    # - os-name: Linux-x86_64-musl
-                    #   runs-on: ubuntu-20.04
-                    #   target: x86_64-unknown-linux-musl
-
-                    # - os-name: Linux-aarch64-musl
-                    #   runs-on: ubuntu-20.04
-                    #   target: aarch64-unknown-linux-musl
-
-                    - os-name: Linux-riscv64
-                      runs-on: ubuntu-20.04
-                      target: riscv64gc-unknown-linux-gnu
-
-                    - os-name: Linux-s390x
-                      runs-on: ubuntu-20.04
-                      target: s390x-unknown-linux-gnu
 
                     - os-name: Windows-x86_64-msvc
                       runs-on: windows-latest
                       target: x86_64-pc-windows-msvc
 
-                    - os-name: Windows-x86_64-aarch64
-                      runs-on: windows-latest
-                      target: aarch64-pc-windows-msvc
-
-                    - os-name: Windows-x86_64-gnu
-                      runs-on: windows-latest
-                      target: x86_64-pc-windows-gnu
-
                     - os-name: macOS-x86_64
-                      runs-on: macOS-latest
+                      runs-on: macos-13
                       target: x86_64-apple-darwin
 
                     - os-name: macOS-aarch64
@@ -81,7 +49,7 @@ jobs:
                   npm install cn-font-split -g
                   cn-font-split ls
 
-            - name: Create index.mjs file
+            - name: Create index.mjs file Linux
               if: ${{ runner.os != 'Windows' }}
               run: |
                   cat > index.mjs <<EOL
@@ -95,7 +63,7 @@ jobs:
                           await directory.extract({ path: "./" });
                       });
                   EOL
-            - name: Create index.mjs file
+            - name: Create index.mjs file Windows
               if: ${{ runner.os == 'Windows' }}
               run: |
                   $content = @'
@@ -124,5 +92,100 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: test-${{ matrix.platform.target }}-${{hashFiles('dist/**/*.woff2')}}
+                  path: ./dist/**/*
+                  if-no-files-found: error
+    linux:
+        name: Test - ${{ matrix.platform.name }}
+        strategy:
+            fail-fast: false
+            matrix:
+                platform:
+                    # - name: aarch64-unknown-linux-gnu-bookworm
+                    #   arch: aarch64
+                    #   distro: bookworm
+                    - name: aarch64-unknown-linux-gnu-ubuntu_latest
+                      arch: aarch64
+                      distro: ubuntu_latest
+                    # - name: aarch64-unknown-linux-gnu-ubuntu22.04
+                    #   arch: aarch64
+                    #   distro: ubuntu22.04
+                    # - name: riscv64gc-unknown-linux-gnu
+                    #   arch: riscv64
+                    #   distro: ubuntu_latest
+                    # - name: s390x-unknown-linux-gnu
+                    #   arch: s390x
+                    #   distro: ubuntu_latest
+                    # more targets here ...
+        env:
+            TZ: Asia/Shanghai
+        runs-on: ubuntu-24.04
+        steps:
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '18'
+                  registry-url: 'https://registry.npmjs.org'
+
+            - name: Create index.mjs file
+              run: |
+                  cat > index.mjs <<EOL
+                  import unzipper from "unzipper";
+                  fetch(
+                      "https://github.com/atelier-anchor/smiley-sans/releases/download/v2.0.1/smiley-sans-v2.0.1.zip"
+                  )
+                      .then((res) => res.arrayBuffer())
+                      .then(async (res) => {
+                          const directory = await unzipper.Open.buffer(Buffer.from(res));
+                          await directory.extract({ path: "./" });
+                      });
+                  EOL
+
+            - name: Install unzipper
+              run: |
+                  npm init -y
+                  npm install unzipper
+                  node index.mjs
+
+            - name: Build artifact
+              uses: uraimo/run-on-arch-action@v2
+              with:
+                  arch: ${{ matrix.platform.arch }}
+                  distro: ${{ matrix.platform.distro }}
+
+                  # Not required, but speeds up builds
+                  githubToken: ${{ github.token }}
+
+                  dockerRunArgs: |
+                      --volume "${PWD}/:/app"
+
+                  # The shell to run commands with in the container
+                  shell: /bin/sh
+
+                  install: |
+                      case "${{ matrix.platform.distro }}" in
+                        ubuntu*|jessie|stretch|buster|bullseye)
+                          apt-get update -q -y
+                          apt-get install -q -y nodejs npm
+                          ;;
+                        fedora*)
+                          dnf -y update
+                          dnf -y install nodejs which
+                          ;;
+                        alpine*)
+                          apk update
+                          apk add nodejs
+                          ;;
+                      esac
+
+                  # Produce a binary artifact and place it in the mounted volume
+                  run: |
+                      npm i cn-font-split -g
+                      cn-font-split ls
+                      cn-font-split -i ./SmileySans-Oblique.otf -o ./dist/
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: test-${{ matrix.platform.name }}-${{hashFiles('dist/**/*.woff2')}}
                   path: ./dist/**/*
                   if-no-files-found: error
