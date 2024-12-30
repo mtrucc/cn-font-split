@@ -2,6 +2,10 @@ name: test-cross-use
 on:
     workflow_dispatch:
         inputs:
+            version:
+                description: '测试写这个为 true'
+                required: true
+                default: '7.0.0-beta-9'
             dryRun:
                 description: '测试写这个为 true'
                 required: true
@@ -94,28 +98,15 @@ jobs:
                   name: test-${{ matrix.platform.target }}-${{hashFiles('dist/**/*.woff2')}}
                   path: ./dist/**/*
                   if-no-files-found: error
-    linux:
+    nodejs:
         name: Test - ${{ matrix.platform.name }}
         strategy:
             fail-fast: false
             matrix:
                 platform:
-                    # - name: aarch64-unknown-linux-gnu-bookworm
-                    #   arch: aarch64
-                    #   distro: bookworm
                     - name: aarch64-unknown-linux-gnu-ubuntu_latest
                       arch: aarch64
                       distro: ubuntu_latest
-                    # - name: aarch64-unknown-linux-gnu-ubuntu22.04
-                    #   arch: aarch64
-                    #   distro: ubuntu22.04
-                    # - name: riscv64gc-unknown-linux-gnu
-                    #   arch: riscv64
-                    #   distro: ubuntu_latest
-                    # - name: s390x-unknown-linux-gnu
-                    #   arch: s390x
-                    #   distro: ubuntu_latest
-                    # more targets here ...
         env:
             TZ: Asia/Shanghai
         runs-on: ubuntu-24.04
@@ -182,6 +173,76 @@ jobs:
                       npm i cn-font-split -g
                       cn-font-split ls
                       cn-font-split -i ./SmileySans-Oblique.otf -o ./dist/
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: test-${{ matrix.platform.name }}-${{hashFiles('dist/**/*.woff2')}}
+                  path: ./dist/**/*
+                  if-no-files-found: error
+    python:
+        name: Test - ${{ matrix.platform.name }}
+        strategy:
+            fail-fast: false
+            matrix:
+                platform:
+                    - name: aarch64-unknown-linux-gnu-bookworm
+                      arch: aarch64
+                      distro: bookworm
+                      target: aarch64-unknown-linux-gnu
+                    # - name: aarch64-unknown-linux-gnu-ubuntu22.04
+                    #   arch: aarch64
+                    #   distro: ubuntu22.04
+                    #   target: aarch64-unknown-linux-gnu
+                    - name: riscv64gc-unknown-linux-gnu
+                      arch: riscv64
+                      distro: ubuntu_latest
+                      target: riscv64gc-unknown-linux-gnu
+                    - name: s390x-unknown-linux-gnu
+                      arch: s390x
+                      distro: ubuntu_latest
+                      target: s390x-unknown-linux-gnu
+                    # more targets here ...
+        env:
+            TZ: Asia/Shanghai
+        runs-on: ubuntu-24.04
+        steps:
+            - name: Build artifact
+              uses: uraimo/run-on-arch-action@v2
+              with:
+                  arch: ${{ matrix.platform.arch }}
+                  distro: ${{ matrix.platform.distro }}
+
+                  # Not required, but speeds up builds
+                  githubToken: ${{ github.token }}
+
+                  dockerRunArgs: |
+                      --volume "${PWD}/:/app"
+
+                  # The shell to run commands with in the container
+                  shell: /bin/sh
+
+                  install: |
+                      case "${{ matrix.platform.distro }}" in
+                        ubuntu*|jessie|stretch|buster|bullseye)
+                          apt-get update -q -y
+                          apt-get install -q -y nodejs npm
+                          ;;
+                        fedora*)
+                          dnf -y update
+                          dnf -y install nodejs which
+                          ;;
+                        alpine*)
+                          apk update
+                          apk add nodejs
+                          ;;
+                      esac
+
+                  # Produce a binary artifact and place it in the mounted volume
+                  run: |
+                      pip3 install cn-font-split
+                      cn-font-split-py --install ${{ matrix.platform.target }}@${{inputs.version}}
+                      cn-font-split-py -i ./SmileySans-Oblique.otf -o ./dist/
 
             - name: Upload artifact
               uses: actions/upload-artifact@v4
