@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='cn_font_split',
-    version='7.0.5',  # Use 'b' for beta
+    version='7.0.7',  # Use 'b' for beta
     description='A revolutionary font subsetter that supports CJK and any characters!',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
@@ -27,7 +27,8 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[  # Include your dependencies here
         'google===3.0.0',
-        'protobuf==5.29.2'
+        'protobuf==5.29.2',
+        'requests==2.32.3'
     ],
     entry_points={
         'console_scripts': [

@@ -1,11 +1,19 @@
 
 import os
 from ctypes import CDLL, CFUNCTYPE, c_size_t, POINTER, c_ubyte, string_at
+import sys
 from .gen import index_pb2
 from pathlib import Path
 
+current_file_path = os.path.abspath(__file__)
+
+# 获取当前文件所在的目录
+current_dir = os.path.dirname(current_file_path)
+
 
 def create_api(ctx):
+    output_dir = Path(ctx["outDir"])
+
     def cb(pointer, size):
         byte_data = string_at(pointer, size)
         cloned_byte_data = bytes(byte_data)
@@ -15,7 +23,6 @@ def create_api(ctx):
             print("构建成功")
         if msg.event == 1:
             print(msg.message)
-            output_dir = Path(ctx["outDir"])
             output_dir.mkdir(parents=True, exist_ok=True)
 
             file_name = msg.message
@@ -29,14 +36,26 @@ def create_api(ctx):
     return cb
 
 
-bin_path = os.getenv('CN_FONT_SPLIT_BIN')
-lib = CDLL(bin_path)
-callback_type = CFUNCTYPE(None, POINTER(c_ubyte), c_size_t)
-lib.font_split.argtypes = [POINTER(c_ubyte), c_size_t, callback_type]
-lib.font_split.restype = None
+def get_library_extension():
+    """根据操作系统返回适当的库文件扩展名"""
+    if sys.platform.startswith('win'):
+        return '.dll'
+    elif sys.platform.startswith('darwin'):
+        return '.dylib'
+    else:
+        return '.so'  # 默认为 Linux 或其他 Unix 系统
 
 
 def font_split(info):
+    bin_path = os.getenv('CN_FONT_SPLIT_BIN')
+    if bin_path is None:
+        bin_path = os.path.join(
+            current_dir, "libffi" + get_library_extension())
+    # print(bin_path)
+    lib = CDLL(bin_path)
+    callback_type = CFUNCTYPE(None, POINTER(c_ubyte), c_size_t)
+    lib.font_split.argtypes = [POINTER(c_ubyte), c_size_t, callback_type]
+    lib.font_split.restype = None
     data = None
     with open(info['input'], 'rb') as file:
         data = file.read()
