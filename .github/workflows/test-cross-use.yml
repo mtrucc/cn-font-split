@@ -207,6 +207,31 @@ jobs:
             TZ: Asia/Shanghai
         runs-on: ubuntu-24.04
         steps:
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '18'
+                  registry-url: 'https://registry.npmjs.org'
+
+            - name: Create index.mjs file
+              run: |
+                  cat > index.mjs <<EOL
+                  import unzipper from "unzipper";
+                  fetch(
+                      "https://github.com/atelier-anchor/smiley-sans/releases/download/v2.0.1/smiley-sans-v2.0.1.zip"
+                  )
+                      .then((res) => res.arrayBuffer())
+                      .then(async (res) => {
+                          const directory = await unzipper.Open.buffer(Buffer.from(res));
+                          await directory.extract({ path: "./" });
+                      });
+                  EOL
+
+            - name: Install unzipper
+              run: |
+                  npm init -y
+                  npm install unzipper
+                  node index.mjs
             - name: Build artifact
               uses: uraimo/run-on-arch-action@v2
               with:
