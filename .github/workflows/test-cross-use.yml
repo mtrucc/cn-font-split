@@ -5,7 +5,7 @@ on:
             version:
                 description: '版本号'
                 required: true
-                default: '7.0.0-beta-9'
+                default: '7.0.1'
             dryRun:
                 description: '测试写这个为 true'
                 required: true
@@ -190,14 +190,22 @@ jobs:
                       arch: aarch64
                       distro: bookworm
                       target: aarch64-unknown-linux-gnu
-                    # - name: aarch64-unknown-linux-gnu-ubuntu22.04
-                    #   arch: aarch64
-                    #   distro: ubuntu22.04
-                    #   target: aarch64-unknown-linux-gnu
+
+                    - name: aarch64-unknown-linux-gnu-ubuntu22.04
+                      arch: aarch64
+                      distro: ubuntu22.04
+                      target: aarch64-unknown-linux-gnu
+
+                    - name: aarch64-unknown-linux-gnu-ubuntu20.04
+                      arch: aarch64
+                      distro: ubuntu20.04
+                      target: aarch64-unknown-linux-gnu
+
                     - name: riscv64gc-unknown-linux-gnu
                       arch: riscv64
                       distro: ubuntu_latest
                       target: riscv64gc-unknown-linux-gnu
+
                     - name: s390x-unknown-linux-gnu
                       arch: s390x
                       distro: ubuntu_latest
